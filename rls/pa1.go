@@ -17,20 +17,23 @@ import (
 
 //This struct holds the Process Information such as Name, Arrival Time, and Burst Time
 type ProcessInfo struct {
+	ID int
    	name string
    	arrivalTime int
    	burstTime int
+   	waitTime int
+   	turnAroundTime int
+   	completionTime int
 }
 
 //list of variables
 var (
 	processCount, totalTime, quantum int
 	schedulingAlgorithm string
+	completionT int
 
+	
 	process []ProcessInfo	
-	waitTime []int
-	turnAroundTime []int
-	completionTime []int
 )
 
 //returns the processCount, totalTime, schedulingAlgorithm, and quantum from the input file
@@ -131,6 +134,7 @@ func getListOfProcesses (filename string, pc int) (p []ProcessInfo) {
 
         	fileScanner.Scan()
         	process.name = fileScanner.Text()
+        	process.ID++
         	count++
 
         } else if(word == "arrival") {
@@ -161,42 +165,78 @@ func getListOfProcesses (filename string, pc int) (p []ProcessInfo) {
 
 
 
-func fcfs (process []ProcessInfo, processCount int)  {
-	
-	//Completion Time
-	var completionT int = 0
+func fcfs (process []ProcessInfo, processCount int, usefor int)  {
 		
 	//sort the slice with respect to arrival time
 	sort.Slice(process, func (i, j int) bool { return process[i].arrivalTime < process[j].arrivalTime })
+
+	for i:=0; i<processCount; i++ {
+
+		process[i].completionTime = completionT + process[i].burstTime
+		completionT = process[i].completionTime
+
+		process[i].turnAroundTime = process[i].completionTime - process[i].arrivalTime
+
+		process[i].waitTime = process[i].turnAroundTime - process[i].burstTime
+		if process[i].waitTime < 0 {
+			process[i].waitTime = 0
+		}
+	}
 	
-	//allocate memory to completionTime, waitTime, and turnAroundTime slices
-	completionTime = make([]int, processCount)
-	turnAroundTime = make([] int, processCount)
-	waitTime = make([]int, processCount)
 
-	for i := 0; i < processCount; i++ {
+	//print the number of processes and the type of algorithm requested
+	fmt.Printf("%3d processes\n", processCount)
+	fmt.Println("Using First-Come First-Served")
 
-		completionT += process[i].burstTime
-		completionTime[i] = completionT
-		
-		turnAroundTime[i] =  completionTime[i] - process[i].arrivalTime
+	status := [4]string{"arrived", "selected", "finished", "idle"}
+	index := 0
 
-		waitTime[i] = turnAroundTime[i] - process[i].burstTime
+	//print all the processes
+	for time:=0; time < usefor; time++{
+
+		fmt.Printf("Time %3d : %s %s\n", time, process[index].name, status[0])
+		fmt.Printf("Time %3d : %s %s (burst %d)\n", time, process[index].name, status[1], process[index].burstTime)
+
+		for (time != process[index].completionTime) {
+			time++
+		}
+
+		//process # finished
+		fmt.Printf("Time %3d : %s %s\n", time, process[index].name, status[2])
+		fmt.Printf("Time %3d : %s\n", time, status[3])
+		index++
+
+		for ((index != processCount) && (time != process[index].arrivalTime)) {
+			time++
+			fmt.Printf("Time %3d : %s\n", time, status[3])
+		}
+
+		for((index >= processCount) && (time < usefor)) {
+			time++;
+			fmt.Printf("Time %3d : %s\n", time, status[3])
+		}
 	}
 
-	fmt.Printf("Processes = %v\n", process)
-	fmt.Printf("Completion Time = %v\n", completionTime)
-	fmt.Printf("Turn Around Time = %v\n", turnAroundTime)
-	fmt.Printf("Wait Time = %v\n", waitTime)
+	//print how long was the system supposed to run for
+	fmt.Printf("Finished at time  %d\n\n", usefor)
+
+	//sort the slice with respect to process ID
+	sort.Slice(process, func (i, j int) bool { return process[i].ID < process[j].ID })
+
+	//print the wait and turn around times
+	for i:=0; i<processCount; i++ {
+		fmt.Printf("%s wait   %3d turnaround   %3d\n", process[i].name, process[i].waitTime, process[i].turnAroundTime)
+	}
+	
 }
 
-func sjf (process []ProcessInfo, processCount int)  {
+func sjf (process []ProcessInfo, processCount int, usefor int)  {
 	
 	//sort the slice with respect to first arrival and then burst time
 	sort.Slice(process, func(i, j int) bool { return process[i].burstTime < process[j].burstTime })
 }
 
-func rr (process []ProcessInfo, processCount int, q int)  {
+func rr (process []ProcessInfo, processCount int, usefor int, q int)  {
 	fmt.Println("RR = ")
 	fmt.Println(process)
 }
@@ -210,11 +250,11 @@ func main() {
 	process = getListOfProcesses(inputFile, processCount)
 
 	if(schedulingAlgorithm == "fcfs") {
-		fcfs(process, processCount)
+		fcfs(process, processCount, totalTime)
 	} else if (schedulingAlgorithm == "sjf") {
-		sjf(process, processCount)
+		sjf(process, processCount, totalTime)
 	} else if (schedulingAlgorithm == "rr") {
-		rr(process, processCount, quantum)
+		rr(process, processCount, totalTime, quantum)
 	}
 
 

@@ -17,20 +17,26 @@ import (
 
 //This struct holds the Process Information such as Name, Arrival Time, and Burst Time
 type ProcessInfo struct {
+    ID int
        name string
        arrivalTime int
        burstTime int
+       waitTime int
+       turnAroundTime int
+       completionTime int
+       selected bool
+       completed bool
+       selectionTime int
 }
 
 //list of variables
 var (
     processCount, totalTime, quantum int
     schedulingAlgorithm string
+    completionT int
+
 
     process []ProcessInfo
-    waitTime []int
-    turnAroundTime []int
-    completionTime []int
 )
 
 //returns the processCount, totalTime, schedulingAlgorithm, and quantum from the input file
@@ -131,6 +137,7 @@ func getListOfProcesses (filename string, pc int) (p []ProcessInfo) {
 
             fileScanner.Scan()
             process.name = fileScanner.Text()
+            process.ID++
             count++
 
         } else if(word == "arrival") {
@@ -160,43 +167,103 @@ func getListOfProcesses (filename string, pc int) (p []ProcessInfo) {
 }
 
 
-
-func fcfs (process []ProcessInfo, processCount int)  {
-
-    //Completion Time
-    var completionT int = 0
+func fcfs (process []ProcessInfo, processCount int, usefor int)  {
 
     //sort the slice with respect to arrival time
     sort.Slice(process, func (i, j int) bool { return process[i].arrivalTime < process[j].arrivalTime })
 
-    //allocate memory to completionTime, waitTime, and turnAroundTime slices
-    completionTime = make([]int, processCount)
-    turnAroundTime = make([] int, processCount)
-    waitTime = make([]int, processCount)
+    fmt.Printf("%3d processes\n", processCount)
+    fmt.Println("Using First-Come First-Served")
 
-    for i := 0; i < processCount; i++ {
+    var arrivalQueue []ProcessInfo
+     arrivalQueue = make([]ProcessInfo, processCount)
+     arrivalQueueCapacity := 0
 
-        completionT += process[i].burstTime
-        completionTime[i] = completionT
+    time := 0
+    index := 0
+    for time < usefor {
 
-        turnAroundTime[i] =  completionTime[i] - process[i].arrivalTime
+        for i:=0; i < processCount; i++ {
+            if(process[i].arrivalTime == time) {
 
-        waitTime[i] = turnAroundTime[i] - process[i].burstTime
+                fmt.Printf("Time %3d : %s arrived\n", time, process[i].name)
+                arrivalQueue[i] = process[i]
+                arrivalQueueCapacity++
+            }
+        }
+
+         if (arrivalQueueCapacity == 0) {
+             fmt.Printf("Time %3d : Idle\n", time)
+         }
+
+        if(arrivalQueueCapacity > 0 ) {
+
+
+            if(arrivalQueue[index].selected && ((arrivalQueue[index].selectionTime + arrivalQueue[index].burstTime) == time)) {
+
+                arrivalQueue[index].completed = true
+                arrivalQueue[index].completionTime = time
+
+                arrivalQueue[index].selected = false
+                arrivalQueueCapacity--;
+
+                fmt.Printf("Time %3d : %s finished\n", time, process[index].name)
+
+
+                if(index < (processCount-1)) {
+                    index++
+                }
+
+            }
+
+            if(!arrivalQueue[index].selected && !arrivalQueue[index].completed && arrivalQueueCapacity > 0) {
+
+                arrivalQueue[index].selected = true
+                arrivalQueue[index].selectionTime = time
+
+                fmt.Printf("Time %3d : %s selected (burst %3d)\n", time, process[index].name, process[index].burstTime)
+
+            } else if (arrivalQueueCapacity == 0) {
+                fmt.Printf("Time %3d : Idle\n", time)
+            }
+
+
+        }
+
+        time++
     }
 
-    fmt.Printf("Processes = %v\n", process)
-    fmt.Printf("Completion Time = %v\n", completionTime)
-    fmt.Printf("Turn Around Time = %v\n", turnAroundTime)
-    fmt.Printf("Wait Time = %v\n", waitTime)
+    //set the arrival queue to process to update the wait and turn around times
+    process = arrivalQueue
+
+    for i:=0; i<processCount; i++ {
+
+        process[i].turnAroundTime = process[i].completionTime - process[i].arrivalTime
+        process[i].waitTime = process[i].turnAroundTime - process[i].burstTime
+
+    }
+
+     //print how long was the system supposed to run for
+     fmt.Printf("Finished at time  %d\n\n", usefor)
+
+     //sort the slice with respect to process ID
+     sort.Slice(process, func (i, j int) bool { return process[i].ID < process[j].ID })
+
+    //print the wait and turn around times
+    for i:=0; i<processCount; i++ {
+        fmt.Printf("%s wait %3d turnaround %3d\n", process[i].name, process[i].waitTime, process[i].turnAroundTime)
+    }
+
+
 }
 
-func sjf (process []ProcessInfo, processCount int)  {
+func sjf (process []ProcessInfo, processCount int, usefor int)  {
 
     //sort the slice with respect to first arrival and then burst time
-    sort.Slice(process, func(i, j int) bool { return process[i].burstTime < process[j].burstTime })
+    //sort.Slice(process, func(i, j int) bool { return process[i].burstTime < process[j].burstTime })
 }
 
-func rr (process []ProcessInfo, processCount int, q int)  {
+func rr (process []ProcessInfo, processCount int, usefor int, q int)  {
     fmt.Println("RR = ")
     fmt.Println(process)
 }
@@ -210,33 +277,11 @@ func main() {
     process = getListOfProcesses(inputFile, processCount)
 
     if(schedulingAlgorithm == "fcfs") {
-        fcfs(process, processCount)
+        fcfs(process, processCount, totalTime)
     } else if (schedulingAlgorithm == "sjf") {
-        sjf(process, processCount)
+        sjf(process, processCount, totalTime)
     } else if (schedulingAlgorithm == "rr") {
-        rr(process, processCount, quantum)
+        rr(process, processCount, totalTime, quantum)
     }
 
-
-    // fmt.Printf("\nProcess Count = %d\n", processCount)
-    // fmt.Printf("Time to run the algorithm for = %d\n", totalTime)
-    // fmt.Printf("Type of Scheduling Algorithm = %s\n", schedulingAlgorithm)
-    // fmt.Printf("Quantum (if any) = %d\n\n", quantum)
-    // fmt.Println("List of Processes: ")
-    // fmt.Println(process)
-    // fmt.Println()
-
  }
-
-
-
-
-
-
-
-
-
-
-
-
-

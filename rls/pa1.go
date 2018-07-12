@@ -12,21 +12,23 @@ import (
      "os"
      "bufio"
      "strconv"
-     "sort"
+//	 "sort"
 )
 
 //This struct holds the Process Information such as Name, Arrival Time, and Burst Time
 type ProcessInfo struct {
 	ID int
    	name string
+
    	arrivalTime int
    	burstTime int
    	waitTime int
    	turnAroundTime int
    	completionTime int
+   	selectionTime int
+
    	selected bool
    	completed bool
-   	selectionTime int
 }
 
 //list of variables
@@ -169,8 +171,25 @@ func getListOfProcesses (filename string, pc int) (p []ProcessInfo) {
 
 func fcfs (process []ProcessInfo, processCount int, usefor int)  {
 		
-	//sort the slice with respect to arrival time
-	sort.Slice(process, func (i, j int) bool { return process[i].arrivalTime < process[j].arrivalTime })
+	//Using built in sort method to sort 
+//	sort.Slice(process, func (i, j int) bool { return process[i].arrivalTime < process[j].arrivalTime })
+
+	//selection sort to sort with respect to arrival times
+	for i := 0; i < (len(process) - 1); i++ {
+
+		minIndex := i
+
+		for j := i+1; j < len(process); j++ {
+
+			if(process[j].arrivalTime < process[minIndex].arrivalTime) {
+				minIndex = j;
+			}
+		}
+
+		temp := process[minIndex]
+		process[minIndex] = process[i]
+		process[i] = temp
+	}
 
 	fmt.Printf("%3d processes\n", processCount)
 	fmt.Println("Using First-Come First-Served")
@@ -247,7 +266,23 @@ func fcfs (process []ProcessInfo, processCount int, usefor int)  {
  	fmt.Printf("Finished at time  %d\n\n", usefor)
 
  	//sort the slice with respect to process ID
- 	sort.Slice(process, func (i, j int) bool { return process[i].ID < process[j].ID })
+ //	sort.Slice(process, func (i, j int) bool { return process[i].ID < process[j].ID })
+ 	//selection sort to sort with respect to arrival times
+	for i := 0; i < (len(process) - 1); i++ {
+
+		minIndex := i
+
+		for j := i+1; j < len(process); j++ {
+
+			if(process[j].ID < process[minIndex].ID) {
+				minIndex = j;
+			}
+		}
+
+		temp := process[minIndex]
+		process[minIndex] = process[i]
+		process[i] = temp
+	}
 
 	//print the wait and turn around times
 	for i:=0; i<processCount; i++ {
@@ -256,6 +291,29 @@ func fcfs (process []ProcessInfo, processCount int, usefor int)  {
 	
 	
 }
+
+// //using selection sort to sort the process based on arrival times
+// func selectionSort (process []ProcessInfo) {
+
+	
+// 	for i := 0; i < (len(process) - 1); i++ {
+
+// 		minIndex := i
+
+// 		for j := i+1; j < len(process); j++ {
+
+// 			if(process[j].arrivalTime < process[minIndex].arrivalTime) {
+// 				minIndex = j;
+// 			}
+// 		}
+
+// 		temp := process[minIndex]
+// 		process[minIndex] = process[i]
+// 		process[i] = temp
+// 	}
+	
+// }
+
 
 func sjf (process []ProcessInfo, processCount int, usefor int)  {
 	
@@ -283,5 +341,7 @@ func main() {
 	} else if (schedulingAlgorithm == "rr") {
 		rr(process, processCount, totalTime, quantum)
 	}
+
+	
    
  }

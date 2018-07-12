@@ -265,8 +265,6 @@ func fcfs (process []ProcessInfo, processCount int, usefor int)  {
  	//print how long was the system supposed to run for
  	fmt.Printf("Finished at time  %d\n\n", usefor)
 
- 	//sort the slice with respect to process ID
- //	sort.Slice(process, func (i, j int) bool { return process[i].ID < process[j].ID })
  	//selection sort to sort with respect to arrival times
 	for i := 0; i < (len(process) - 1); i++ {
 
@@ -291,28 +289,6 @@ func fcfs (process []ProcessInfo, processCount int, usefor int)  {
 	
 	
 }
-
-// //using selection sort to sort the process based on arrival times
-// func selectionSort (process []ProcessInfo) {
-
-	
-// 	for i := 0; i < (len(process) - 1); i++ {
-
-// 		minIndex := i
-
-// 		for j := i+1; j < len(process); j++ {
-
-// 			if(process[j].arrivalTime < process[minIndex].arrivalTime) {
-// 				minIndex = j;
-// 			}
-// 		}
-
-// 		temp := process[minIndex]
-// 		process[minIndex] = process[i]
-// 		process[i] = temp
-// 	}
-	
-// }
 
 
 func sjf (process []ProcessInfo, processCount int, usefor int)  {

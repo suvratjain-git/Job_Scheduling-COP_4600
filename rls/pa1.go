@@ -12,10 +12,9 @@ import (
      "os"
      "bufio"
      "strconv"
-//	 "sort"
 )
 
-//This struct holds the Process Information such as Name, Arrival Time, and Burst Time
+//This struct holds a Process's Information such as Process ID, name, arrival time, burst time, wait time, turn arount time, completion time, selection time, boolean flag for when a process is selected and completed 
 type ProcessInfo struct {
 	ID int
    	name string
@@ -31,13 +30,21 @@ type ProcessInfo struct {
    	completed bool
 }
 
-//list of variables
+// type BurstTimesSFJ struct {
+// 	ID int
+// 	burstTime int
+// }
+
+//list of variables used in the program
+//processCount = total number of processes in the input file
+//totalTime = total time for which the algorithm is supposed to run for
+//quantum (only for round robin algorithm)
+//scheduling alogirhtm = what kind of scheduling algorithm to be used
+//process = a slice of ProcessInfo struct
 var (
 	processCount, totalTime, quantum int
 	schedulingAlgorithm string
-	completionT int
 
-	
 	process []ProcessInfo	
 )
 
@@ -168,28 +175,82 @@ func getListOfProcesses (filename string, pc int) (p []ProcessInfo) {
 	return p
 }
 
+func sort (process []ProcessInfo, typeOfSort string) (p []ProcessInfo) {
 
-func fcfs (process []ProcessInfo, processCount int, usefor int)  {
-		
-	//Using built in sort method to sort 
-//	sort.Slice(process, func (i, j int) bool { return process[i].arrivalTime < process[j].arrivalTime })
+	p = make([]ProcessInfo, len(process))
+	p = process
 
-	//selection sort to sort with respect to arrival times
-	for i := 0; i < (len(process) - 1); i++ {
+	/*
+		 Sort processes with respect to following:
+		 AT = Arrival Time
+		 BT = Burst Time
+		 ID = Process ID
+	*/
+	if(typeOfSort == "AT") {
 
-		minIndex := i
+		for i := 0; i < (len(p) - 1); i++ {
 
-		for j := i+1; j < len(process); j++ {
+			minIndex := i
 
-			if(process[j].arrivalTime < process[minIndex].arrivalTime) {
-				minIndex = j;
+			for j := i+1; j < len(p); j++ {
+
+				if(p[j].arrivalTime < p[minIndex].arrivalTime) {
+					minIndex = j;
+				}
 			}
+
+			//swap
+			temp := p[minIndex]
+			p[minIndex] = p[i]
+			p[i] = temp
 		}
 
-		temp := process[minIndex]
-		process[minIndex] = process[i]
-		process[i] = temp
+	} else if (typeOfSort == "BT") {
+
+		for i := 0; i < (len(p) - 1); i++ {
+
+			minIndex := i
+
+			for j := i+1; j < len(p); j++ {
+
+				if(p[j].burstTime < p[minIndex].burstTime) {
+					minIndex = j;
+				}
+			}
+
+			//swap
+			temp := p[minIndex]
+			p[minIndex] = p[i]
+			p[i] = temp
+		}
+
+	} else if (typeOfSort == "ID") {
+
+		for i := 0; i < (len(p) - 1); i++ {
+
+			minIndex := i
+
+			for j := i+1; j < len(p); j++ {
+
+				if(p[j].ID < p[minIndex].ID) {
+					minIndex = j;
+				}
+			}
+
+			//swap
+			temp := p[minIndex]
+			p[minIndex] = p[i]
+			p[i] = temp
+		}
 	}
+
+	return p
+}
+
+func fcfs (process []ProcessInfo, processCount int, usefor int)  {
+	
+	//sort processes with respect to arrival times
+	process = sort(process,"AT")
 
 	fmt.Printf("%3d processes\n", processCount)
 	fmt.Println("Using First-Come First-Served")
@@ -202,6 +263,7 @@ func fcfs (process []ProcessInfo, processCount int, usefor int)  {
 	index := 0
 	for time < usefor {
 
+		//if time = arrival time of a process, then add it to arrival queue and increase queue capacity
 		for i:=0; i < processCount; i++ {
 			if(process[i].arrivalTime == time) {
 
@@ -211,13 +273,16 @@ func fcfs (process []ProcessInfo, processCount int, usefor int)  {
 			}
 		}
 
+		//if there is nothing in the arrival queue, then the CPU is idle
 		 if (arrivalQueueCapacity == 0) {
 		 	fmt.Printf("Time %3d : Idle\n", time)
 		 }
 
+		 //if there is something in the arrival queue, then select a process and run it
 		if(arrivalQueueCapacity > 0 ) {
 
 
+			//if the selelcted process is completed, then flag it as completed and decerease queue capacity
 			if(arrivalQueue[index].selected && ((arrivalQueue[index].selectionTime + arrivalQueue[index].burstTime) == time)) {
 
 				arrivalQueue[index].completed = true
@@ -228,13 +293,14 @@ func fcfs (process []ProcessInfo, processCount int, usefor int)  {
 
 				fmt.Printf("Time %3d : %s finished\n", time, process[index].name)
 
-
+				//increment the index to move on to the next process in the arrival queue 
 				if(index < (processCount-1)) {
 					index++
 				}
 				
 			}
 
+			//if none of the processes is selected in the queue then select one and mark it as selected
 			if(!arrivalQueue[index].selected && !arrivalQueue[index].completed && arrivalQueueCapacity > 0) {
 
 				arrivalQueue[index].selected = true
@@ -265,36 +331,145 @@ func fcfs (process []ProcessInfo, processCount int, usefor int)  {
  	//print how long was the system supposed to run for
  	fmt.Printf("Finished at time  %d\n\n", usefor)
 
- 	//selection sort to sort with respect to arrival times
-	for i := 0; i < (len(process) - 1); i++ {
-
-		minIndex := i
-
-		for j := i+1; j < len(process); j++ {
-
-			if(process[j].ID < process[minIndex].ID) {
-				minIndex = j;
-			}
-		}
-
-		temp := process[minIndex]
-		process[minIndex] = process[i]
-		process[i] = temp
-	}
+ 	//sort processes with respect to process IDs
+ 	process = sort(process,"ID")
 
 	//print the wait and turn around times
 	for i:=0; i<processCount; i++ {
 		fmt.Printf("%s wait %3d turnaround %3d\n", process[i].name, process[i].waitTime, process[i].turnAroundTime)
 	}
-	
-	
+		
 }
-
 
 func sjf (process []ProcessInfo, processCount int, usefor int)  {
 	
-	//sort the slice with respect to first arrival and then burst time
-	//sort.Slice(process, func(i, j int) bool { return process[i].burstTime < process[j].burstTime })
+	//sort processes with respect to arrival times
+	process = sort(process,"AT")
+
+	fmt.Printf("%3d processes\n", processCount)
+	fmt.Println("Using preemptive Shortest Job First")
+
+	//create an arrival queue with capacity of processCount and length 0
+ 	var arrivalQueue []ProcessInfo = make([]ProcessInfo, 0, processCount)
+ 	
+	time := 0
+	arrivalQueueCapacity := 0
+	
+	for time < usefor {	
+
+		
+
+		//add processes to arrival queue as they arrive
+		for i:=0; i < processCount; i++ {
+			if(process[i].arrivalTime == time) {
+
+				//print the processes that have arrived along with at what time did they arrive
+				fmt.Printf("Time %3d : %s arrived\n", time, process[i].name)
+
+				//add the process into arrival queue
+				arrivalQueue = append(arrivalQueue, process[i])
+				arrivalQueueCapacity++
+				 
+			}
+		}
+
+		if (arrivalQueueCapacity == 0){
+			fmt.Printf("Time %3d : Idle\n", time)
+		}
+
+		index := 0
+		previousProcessID := 0
+
+		if(arrivalQueueCapacity > 0){
+
+			for (arrivalQueue[index].completed) {
+				index++
+			}
+
+			if((index < processCount) &&arrivalQueue[index].selected) {
+				previousProcessID = arrivalQueue[index].ID
+			}
+
+			for i:=0; i < len(arrivalQueue); i++ {
+				arrivalQueue[i].selected = false
+			}
+
+			arrivalQueue = sort(arrivalQueue,"BT")
+
+			for ((index < processCount) && arrivalQueue[index].completed) {
+				index++
+			}
+
+			if((index < processCount) && (arrivalQueue[index].ID == previousProcessID)) {
+				arrivalQueue[index].selected = true
+			}
+
+			//if the selelcted process is completed, then flag it as completed and decerease queue capacity
+			if((index < processCount) && arrivalQueue[index].selected && (arrivalQueue[index].burstTime == 0) && !arrivalQueue[index].completed) {
+
+				//unselect the process, mark it completed and note its completion time
+				arrivalQueue[index].selected = false
+				arrivalQueue[index].completed = true
+				arrivalQueue[index].completionTime = time
+				arrivalQueueCapacity--;
+
+				fmt.Printf("Time %3d : %s finished\n", time, arrivalQueue[index].name)
+				
+			}
+
+
+			if ((index < processCount) && arrivalQueue[index].completed && arrivalQueueCapacity > 0) {
+				index++
+			}
+
+			
+			//if none of the processes is selected in the queue then select one and mark it as selected
+			if((index < processCount) && !arrivalQueue[index].selected && !arrivalQueue[index].completed && arrivalQueueCapacity > 0) {
+
+				arrivalQueue[index].selected = true
+				arrivalQueue[index].selectionTime = time
+
+				fmt.Printf("Time %3d : %s selected (burst %3d)\n", time, arrivalQueue[index].name, arrivalQueue[index].burstTime)
+
+			} 
+
+			if (arrivalQueueCapacity == 0) {
+				fmt.Printf("Time %3d : Idle\n", time)
+			}
+
+		}  
+
+		 time++
+
+
+		if((index < processCount) && arrivalQueue[index].burstTime > 0){
+			arrivalQueue[index].burstTime--
+		}
+
+	}
+
+	//calculate the turn around time of the processes
+	for i:=0; i<processCount; i++ {
+		arrivalQueue[i].turnAroundTime = arrivalQueue[i].completionTime - arrivalQueue[i].arrivalTime
+	}
+
+	//sort processes with respect to process IDs
+ 	arrivalQueue = sort(arrivalQueue,"ID")
+ 	process = sort(process,"ID")
+
+ 	//calculate the wait time of the processes
+	for i:=0; i<processCount; i++ {
+		arrivalQueue[i].waitTime = arrivalQueue[i].turnAroundTime - process[i].burstTime
+	}
+
+ 	//print how long was the system supposed to run for
+ 	fmt.Printf("Finished at time  %d\n\n", usefor)
+
+	//print the wait and turn around times
+	for i:=0; i<processCount; i++ {
+		fmt.Printf("%s wait %3d turnaround %3d\n", arrivalQueue[i].name, arrivalQueue[i].waitTime, arrivalQueue[i].turnAroundTime)
+	}
+
 }
 
 func rr (process []ProcessInfo, processCount int, usefor int, q int)  {
@@ -305,7 +480,8 @@ func rr (process []ProcessInfo, processCount int, usefor int, q int)  {
 func main() {
 
 	//Read the file name from the CLI arguements and convert it into an array of bytes
-	inputFile := os.Args[1];
+	inputFile := os.Args[1]
+	//outputFile := os.Args[2]
 
 	processCount, totalTime, schedulingAlgorithm, quantum = getProcessInfo(inputFile)
 	process = getListOfProcesses(inputFile, processCount)
@@ -318,6 +494,11 @@ func main() {
 		rr(process, processCount, totalTime, quantum)
 	}
 
-	
-   
+   //to print to file
+	// file, fileErr := os.Create("file")
+	// if fileErr != nil {
+	//     fmt.Println(fileErr)
+	//     return
+	// }
+	// fmt.Fprintf(file, "%v\n", i)
  }

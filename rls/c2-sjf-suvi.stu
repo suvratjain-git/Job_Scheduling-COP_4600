@@ -1,5 +1,5 @@
   2 processes
-Using First-Come First-Served
+Using preemptive Shortest Job First
 Time   0 : P1 arrived
 Time   0 : P1 selected (burst   5)
 Time   5 : P1 finished

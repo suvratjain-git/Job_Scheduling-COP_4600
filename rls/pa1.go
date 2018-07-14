@@ -247,13 +247,16 @@ func sort (process []ProcessInfo, typeOfSort string) (p []ProcessInfo) {
 	return p
 }
 
-func fcfs (process []ProcessInfo, processCount int, usefor int)  {
+func fcfs (process []ProcessInfo, processCount int, usefor int, outputFile string)  {
 	
+	//output stream to print result to the output file
+	output, _ := os.Create(outputFile)
+
 	//sort processes with respect to arrival times
 	process = sort(process,"AT")
 
-	fmt.Printf("%3d processes\n", processCount)
-	fmt.Println("Using First-Come First-Served")
+	fmt.Fprintf(output, "%3d processes\n", processCount)
+	fmt.Fprintf(output, "Using First-Come First-Served\n")
 
 	var arrivalQueue []ProcessInfo
  	arrivalQueue = make([]ProcessInfo, processCount)
@@ -267,7 +270,7 @@ func fcfs (process []ProcessInfo, processCount int, usefor int)  {
 		for i:=0; i < processCount; i++ {
 			if(process[i].arrivalTime == time) {
 
-				fmt.Printf("Time %3d : %s arrived\n", time, process[i].name)
+				fmt.Fprintf(output, "Time %3d : %s arrived\n", time, process[i].name)
 				arrivalQueue[i] = process[i]
 				arrivalQueueCapacity++
 			}
@@ -275,7 +278,7 @@ func fcfs (process []ProcessInfo, processCount int, usefor int)  {
 
 		//if there is nothing in the arrival queue, then the CPU is idle
 		 if (arrivalQueueCapacity == 0) {
-		 	fmt.Printf("Time %3d : Idle\n", time)
+		 	fmt.Fprintf(output, "Time %3d : Idle\n", time)
 		 }
 
 		 //if there is something in the arrival queue, then select a process and run it
@@ -291,7 +294,7 @@ func fcfs (process []ProcessInfo, processCount int, usefor int)  {
 				arrivalQueue[index].selected = false
 				arrivalQueueCapacity--;
 
-				fmt.Printf("Time %3d : %s finished\n", time, process[index].name)
+				fmt.Fprintf(output, "Time %3d : %s finished\n", time, process[index].name)
 
 				//increment the index to move on to the next process in the arrival queue 
 				if(index < (processCount-1)) {
@@ -306,12 +309,11 @@ func fcfs (process []ProcessInfo, processCount int, usefor int)  {
 				arrivalQueue[index].selected = true
 				arrivalQueue[index].selectionTime = time
 
-				fmt.Printf("Time %3d : %s selected (burst %3d)\n", time, process[index].name, process[index].burstTime)
+				fmt.Fprintf(output, "Time %3d : %s selected (burst %3d)\n", time, process[index].name, process[index].burstTime)
 
 			} else if (arrivalQueueCapacity == 0) {
-				fmt.Printf("Time %3d : Idle\n", time)
+				fmt.Fprintf(output, "Time %3d : Idle\n", time)
 			}
-
 
 		} 
 
@@ -329,25 +331,28 @@ func fcfs (process []ProcessInfo, processCount int, usefor int)  {
 	}
 
  	//print how long was the system supposed to run for
- 	fmt.Printf("Finished at time  %d\n\n", usefor)
+ 	fmt.Fprintf(output, "Finished at time  %d\n\n", usefor)
 
  	//sort processes with respect to process IDs
  	process = sort(process,"ID")
 
 	//print the wait and turn around times
 	for i:=0; i<processCount; i++ {
-		fmt.Printf("%s wait %3d turnaround %3d\n", process[i].name, process[i].waitTime, process[i].turnAroundTime)
+		fmt.Fprintf(output, "%s wait %3d turnaround %3d\n", process[i].name, process[i].waitTime, process[i].turnAroundTime)
 	}
 		
 }
 
-func sjf (process []ProcessInfo, processCount int, usefor int)  {
+func sjf (process []ProcessInfo, processCount int, usefor int, outputFile string)  {
+
+	//output stream to print result to the output file
+	output, _ := os.Create(outputFile)
 	
 	//sort processes with respect to arrival times
 	process = sort(process,"AT")
 
-	fmt.Printf("%3d processes\n", processCount)
-	fmt.Println("Using preemptive Shortest Job First")
+	fmt.Fprintf(output, "%3d processes\n", processCount)
+	fmt.Fprintf(output, "Using preemptive Shortest Job First\n")
 
 	//create an arrival queue with capacity of processCount and length 0
  	var arrivalQueue []ProcessInfo = make([]ProcessInfo, 0, processCount)
@@ -364,7 +369,7 @@ func sjf (process []ProcessInfo, processCount int, usefor int)  {
 			if(process[i].arrivalTime == time) {
 
 				//print the processes that have arrived along with at what time did they arrive
-				fmt.Printf("Time %3d : %s arrived\n", time, process[i].name)
+				fmt.Fprintf(output, "Time %3d : %s arrived\n", time, process[i].name)
 
 				//add the process into arrival queue
 				arrivalQueue = append(arrivalQueue, process[i])
@@ -374,7 +379,7 @@ func sjf (process []ProcessInfo, processCount int, usefor int)  {
 		}
 
 		if (arrivalQueueCapacity == 0){
-			fmt.Printf("Time %3d : Idle\n", time)
+			fmt.Fprintf(output, "Time %3d : Idle\n", time)
 		}
 
 		index := 0
@@ -413,7 +418,7 @@ func sjf (process []ProcessInfo, processCount int, usefor int)  {
 				arrivalQueue[index].completionTime = time
 				arrivalQueueCapacity--;
 
-				fmt.Printf("Time %3d : %s finished\n", time, arrivalQueue[index].name)
+				fmt.Fprintf(output, "Time %3d : %s finished\n", time, arrivalQueue[index].name)
 				
 			}
 
@@ -429,12 +434,12 @@ func sjf (process []ProcessInfo, processCount int, usefor int)  {
 				arrivalQueue[index].selected = true
 				arrivalQueue[index].selectionTime = time
 
-				fmt.Printf("Time %3d : %s selected (burst %3d)\n", time, arrivalQueue[index].name, arrivalQueue[index].burstTime)
+				fmt.Fprintf(output, "Time %3d : %s selected (burst %3d)\n", time, arrivalQueue[index].name, arrivalQueue[index].burstTime)
 
 			} 
 
 			if (arrivalQueueCapacity == 0) {
-				fmt.Printf("Time %3d : Idle\n", time)
+				fmt.Fprintf(output, "Time %3d : Idle\n", time)
 			}
 
 		}  
@@ -463,42 +468,37 @@ func sjf (process []ProcessInfo, processCount int, usefor int)  {
 	}
 
  	//print how long was the system supposed to run for
- 	fmt.Printf("Finished at time  %d\n\n", usefor)
+ 	fmt.Fprintf(output, "Finished at time  %d\n\n", usefor)
 
 	//print the wait and turn around times
 	for i:=0; i<processCount; i++ {
-		fmt.Printf("%s wait %3d turnaround %3d\n", arrivalQueue[i].name, arrivalQueue[i].waitTime, arrivalQueue[i].turnAroundTime)
+		fmt.Fprintf(output,"%s wait %3d turnaround %3d\n", arrivalQueue[i].name, arrivalQueue[i].waitTime, arrivalQueue[i].turnAroundTime)
 	}
 
 }
 
-func rr (process []ProcessInfo, processCount int, usefor int, q int)  {
-	fmt.Println("RR = ")
-	fmt.Println(process)
+func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile string)  {
+	
+	//output stream to print result to the output file
+	//output, _ := os.Create(outputFile)
 }
 
 func main() {
 
 	//Read the file name from the CLI arguements and convert it into an array of bytes
 	inputFile := os.Args[1]
-	//outputFile := os.Args[2]
+	outputFile := os.Args[2]
 
 	processCount, totalTime, schedulingAlgorithm, quantum = getProcessInfo(inputFile)
 	process = getListOfProcesses(inputFile, processCount)
 
 	if(schedulingAlgorithm == "fcfs") {
-		fcfs(process, processCount, totalTime)
+		fcfs(process, processCount, totalTime, outputFile)
 	} else if (schedulingAlgorithm == "sjf") {
-		sjf(process, processCount, totalTime)
+		sjf(process, processCount, totalTime, outputFile)
 	} else if (schedulingAlgorithm == "rr") {
-		rr(process, processCount, totalTime, quantum)
+		rr(process, processCount, totalTime, quantum, outputFile)
 	}
 
-   //to print to file
-	// file, fileErr := os.Create("file")
-	// if fileErr != nil {
-	//     fmt.Println(fileErr)
-	//     return
-	// }
-	// fmt.Fprintf(file, "%v\n", i)
+   
  }

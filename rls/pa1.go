@@ -362,8 +362,6 @@ func sjf (process []ProcessInfo, processCount int, usefor int, outputFile string
 	
 	for time < usefor {	
 
-		
-
 		//add processes to arrival queue as they arrive
 		for i:=0; i < processCount; i++ {
 			if(process[i].arrivalTime == time) {
@@ -481,6 +479,8 @@ func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile 
 	
 	//output stream to print result to the output file
 	//output, _ := os.Create(outputFile)
+
+	
 }
 
 func main() {

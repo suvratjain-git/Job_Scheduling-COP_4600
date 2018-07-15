@@ -479,94 +479,57 @@ func sjf (process []ProcessInfo, processCount int, usefor int, outputFile string
 func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile string)  {
 	
 	//output stream to print result to the output file
-	//output, _ := os.Create(outputFile)
+	output, _ := os.Create(outputFile)
 
 	process = sort(process,"AT")
 
-	fmt.Printf("%3d processes\n", processCount)
-	fmt.Printf("Using Round-Robin\n")
-	fmt.Printf("Quantum %3d\n\n", q)
+	fmt.Fprintf(output,"%3d processes\n", processCount)
+	fmt.Fprintf(output,"Using Round-Robin\n")
+	fmt.Fprintf(output,"Quantum %3d\n\n", q)
 
 	//create an arrival queue with capacity of processCount and length 0
  	var arrivalQueue []ProcessInfo = make([]ProcessInfo, 0, processCount)
+ 	var completedQueue []ProcessInfo = make([]ProcessInfo, 0, processCount)
  	var scheduledProcess ProcessInfo
  	
  	
 	time := 0
 	arrivalQueueCapacity := 0
-	//previousProcessArrivalTime := 0
+	index := 0
 
 	for time < usefor {	
 
 		quantum := 0
-		//previousProcessArrivalTime = scheduledProcess.arrivalTime + 1
 
-		// fmt.Printf("\nPrevious Process Arrival Time = %d, Current Time = %d\n", previousProcessArrivalTime, time)
-		// fmt.Printf("Arrival Queue before adding process: %v\n", arrivalQueue)
-		// fmt.Printf("Arrival Queue Capacity = %d\n", arrivalQueueCapacity)
-		// fmt.Printf("Previous Process: %v\n\n", scheduledProcess)
-		
-		//put all the elements that have arrived so far in the arrival queue
-		for i:=0; i < len(process); i++ {
+		if((index < processCount) && (process[index].arrivalTime == time)) {
 
-			if(process[i].arrivalTime == time) {
+			fmt.Fprintf(output,"Time %3d : %s arrived\n", time, process[index].name)
+			arrivalQueue = append(arrivalQueue, process[index])
+			arrivalQueueCapacity++
 
-				fmt.Printf("Time %3d : %s arrived\n", time, process[i].name)
-				arrivalQueue = append(arrivalQueue, process[i])
-				// process[i].arrived = true
-				arrivalQueueCapacity++
-			}
-		// 	} else { 
-
-		// 		for previousProcessArrivalTime <= time {
-
-		// 			if((process[i].arrivalTime == previousProcessArrivalTime) && !process[i].arrived) {
-
-		// // fmt.Printf("\nPrevious Process Arrival Time = %d, Current Time = %d\n", previousProcessArrivalTime, time)
-
-		// 				fmt.Printf("Time %3d : %s arrived\n", process[i].arrivalTime, process[i].name)
-		// 				arrivalQueue = append(arrivalQueue, process[i])
-		// 				process[i].arrived = true
-		// 				arrivalQueueCapacity++
-		// 			}
-
-		// 			previousProcessArrivalTime++
-		// 		} 
-
-		// 	}
-			
+			//increment the pointer
+			index++
 		}
-
-		// fmt.Printf("Arrival Queue after adding process: %v\n", arrivalQueue)
-		// fmt.Printf("Arrival Queue Capacity = %d\n", arrivalQueueCapacity)
-		// fmt.Printf("Scheduled Process: %v\n\n", scheduledProcess)
 		
-		// if(scheduledProcess.selected && !scheduledProcess.completed) {
-
-		// 	//add the process to back of arrival queue
-		// 	scheduledProcess.selected = false
-		// 	arrivalQueue = append(arrivalQueue, scheduledProcess)
-		// 	arrivalQueueCapacity++
-		// }
 
 		if (arrivalQueueCapacity == 0){
-			fmt.Printf("Time %3d : Idle\n", time)
+			fmt.Fprintf(output, "Time %3d : Idle\n", time)
 			time++
 		}
 
 		if(arrivalQueueCapacity > 0){
-			
-			fmt.Println(arrivalQueue)
-			fmt.Println()
 
-			//select the first element of the slice
+			//if arrival queue has elements
+			// 1. Put it in scheduled process var and mark it selected to show it is running
+			// 2. Remove it from arrival queue and decrease queue capacity
+			// 3. Print the selected process
+			// 4. Run it through quantum:- decrement burst time, increment quantum, and increment time. 
+			//	  At. each time increment check if a process has arrived
+			// 5. If a process has a arrived then add it to the arrival queue
+			// 6. Add the selected process back to arrival queue at the end and run the process and unselect it
+
 			scheduledProcess = arrivalQueue[0]
-
-			//mark it selected and record its selection time
 			scheduledProcess.selected = true
-			scheduledProcess.selectionTime = time
-
-			fmt.Printf("Time %3d : %s selected (burst %3d)\n", time, scheduledProcess.name, scheduledProcess.burstTime)
 
 			//remove first element from arrival queue
 			arrivalQueueCapacity--
@@ -576,12 +539,9 @@ func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile 
 				arrivalQueue = nil
 			}
 
-			// fmt.Printf("\nArrival Queue before quantum %v\n", arrivalQueue)
-			// fmt.Printf("Arrival Queue Capacity = %d\n", arrivalQueueCapacity)
-			// fmt.Printf("Scheduled Process: %v\n\n", scheduledProcess)
-
-			//run it upto quantum
 			if(scheduledProcess.selected && !scheduledProcess.completed) {
+
+				fmt.Fprintf(output, "Time %3d : %s selected (burst %3d)\n", time, scheduledProcess.name, scheduledProcess.burstTime)
 
 				for quantum < q {
 
@@ -591,25 +551,25 @@ func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile 
 					quantum++
 					time++
 
-					//check if any process has arrived
-					for i:=0; i < len(process); i++ {
+					if((index < processCount) && (process[index].arrivalTime == time)) {
 
-						if(process[i].arrivalTime == time) {
+						fmt.Fprintf(output, "Time %3d : %s arrived\n", time, process[index].name)
+						arrivalQueue = append(arrivalQueue, process[index])
+						arrivalQueueCapacity++
 
-							fmt.Printf("Time %3d : %s arrived\n", time, process[i].name)
-							arrivalQueue = append(arrivalQueue, process[i])
-							// process[i].arrived = true
-							arrivalQueueCapacity++
-							
-						} 
+						//increment the pointer
+						index++
 					}
 
 					if(scheduledProcess.burstTime == 0) {
 
 						scheduledProcess.completed = true
+						scheduledProcess.selected = false
 						scheduledProcess.completionTime = time
+						arrivalQueueCapacity--
+						fmt.Fprintf(output, "Time %3d : %s finished\n", time, scheduledProcess.name)
 
-						fmt.Printf("Time %3d : %s finished\n", time, scheduledProcess.name)
+						completedQueue = append(completedQueue, scheduledProcess)
 
 						break
 					}
@@ -617,19 +577,16 @@ func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile 
 					
 				}
 
-			}
-
-			if(scheduledProcess.selected && !scheduledProcess.completed) {
-
-				//add the process to back of arrival queue
-				arrivalQueue = append(arrivalQueue, scheduledProcess)
-
+				//add the process to back of arrival queue after running it upto quantum
 				scheduledProcess.selected = false
+				arrivalQueue = append(arrivalQueue, scheduledProcess)
 				arrivalQueueCapacity++
 			}
 
-			time++
-			// fmt.Println()
+			if (arrivalQueueCapacity == 0){
+				fmt.Fprintf(output, "Time %3d : Idle\n", time)
+				time++
+			}
 
 		}	
 
@@ -637,7 +594,22 @@ func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile 
 
 
  	//print how long was the system supposed to run for
- 	fmt.Printf("Finished at time  %d\n\n", usefor)
+ 	fmt.Fprintf(output, "Finished at time  %d\n\n", usefor)
+
+ 	//sort processes with respect to process IDs
+ 	completedQueue = sort(completedQueue,"ID")
+ 	process = sort(process,"ID")
+
+ 	//calculate the turn around times and wait times of the processes
+	for i:=0; i<processCount; i++ {
+		completedQueue[i].turnAroundTime = completedQueue[i].completionTime - completedQueue[i].arrivalTime
+		completedQueue[i].waitTime = completedQueue[i].turnAroundTime - process[i].burstTime
+	}
+
+ 	//print the wait and turn around times
+	for i:=0; i<processCount; i++ {
+		fmt.Fprintf(output, "%s wait %3d turnaround %3d\n", completedQueue[i].name, completedQueue[i].waitTime, completedQueue[i].turnAroundTime)
+	}
 
 	
 }

@@ -479,17 +479,17 @@ func sjf (process []ProcessInfo, processCount int, usefor int, outputFile string
 func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile string)  {
 	
 	//output stream to print result to the output file
-	// output, _ := os.Create(outputFile)
+	output, _ := os.Create(outputFile)
 
 	process = sort(process,"AT")
 
-	fmt.Printf("%3d processes\n", processCount)
-	fmt.Printf("Using Round-Robin\n")
-	fmt.Printf("Quantum %3d\n\n", q)
+	// fmt.Printf("%3d processes\n", processCount)
+	// fmt.Printf("Using Round-Robin\n")
+	// fmt.Printf("Quantum %3d\n\n", q)
 
-	// fmt.Fprintf(output,"%3d processes\n", processCount)
-	// fmt.Fprintf(output,"Using Round-Robin\n")
-	// fmt.Fprintf(output,"Quantum %3d\n\n", q)
+	fmt.Fprintf(output,"%3d processes\n", processCount)
+	fmt.Fprintf(output,"Using Round-Robin\n")
+	fmt.Fprintf(output,"Quantum %3d\n\n", q)
 
 	//create an arrival queue with capacity of processCount and length 0
  	var arrivalQueue []ProcessInfo = make([]ProcessInfo, 0, processCount)
@@ -507,24 +507,24 @@ func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile 
 
 		if((index < processCount) && (process[index].arrivalTime == time)) {
 
-			fmt.Printf("Time %3d : %s arrived\n", time, process[index].name)
-			// fmt.Fprintf(output,"Time %3d : %s arrived\n", time, process[index].name)
+			// fmt.Printf("Time %3d : %s arrived\n", time, process[index].name)
+			fmt.Fprintf(output,"Time %3d : %s arrived\n", time, process[index].name)
 			arrivalQueue = append(arrivalQueue, process[index])
 			arrivalQueueCapacity++
 
 			//increment the pointer
 			index++
 
-			fmt.Printf("Arrival Queue After entry at #1: %v\n", arrivalQueue)
+			// fmt.Printf("Arrival Queue After entry at #1: %v\n", arrivalQueue)
 		}
 
-		fmt.Printf("Arrival Queue:: %v\n", arrivalQueue)
-		fmt.Printf("Capacity = %d\n", arrivalQueueCapacity)
+		// fmt.Printf("Arrival Queue:: %v\n", arrivalQueue)
+		// fmt.Printf("Capacity = %d\n", arrivalQueueCapacity)
 		
 
 		if (len(arrivalQueue) == 0){
-			fmt.Printf("Time %3d : Idle\n", time)
-			// fmt.Fprintf(output, "Time %3d : Idle\n", time)
+			// fmt.Printf("Time %3d : Idle\n", time)
+			fmt.Fprintf(output, "Time %3d : Idle\n", time)
 			time++
 		}
 
@@ -553,12 +553,12 @@ func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile 
 			}
 			
 
-			fmt.Printf("Arrival Queue after selection: %v\n", arrivalQueue)
+			// fmt.Printf("Arrival Queue after selection: %v\n", arrivalQueue)
 
 			if(scheduledProcess.selected && !scheduledProcess.completed) {
 
-				fmt.Printf("Time %3d : %s selected (burst %3d)\n", time, scheduledProcess.name, scheduledProcess.burstTime)
-				// fmt.Fprintf(output, "Time %3d : %s selected (burst %3d)\n", time, scheduledProcess.name, scheduledProcess.burstTime)
+				// fmt.Printf("Time %3d : %s selected (burst %3d)\n", time, scheduledProcess.name, scheduledProcess.burstTime)
+				fmt.Fprintf(output, "Time %3d : %s selected (burst %3d)\n", time, scheduledProcess.name, scheduledProcess.burstTime)
 
 				for quantum < q {
 
@@ -570,15 +570,15 @@ func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile 
 
 					if((index < processCount) && (process[index].arrivalTime == time)) {
 
-						fmt.Printf("Time %3d : %s arrived\n", time, process[index].name)
-						// fmt.Fprintf(output, "Time %3d : %s arrived\n", time, process[index].name)
+						// fmt.Printf("Time %3d : %s arrived\n", time, process[index].name)
+						fmt.Fprintf(output, "Time %3d : %s arrived\n", time, process[index].name)
 						arrivalQueue = append(arrivalQueue, process[index])
 						arrivalQueueCapacity++
 
 						//increment the pointer
 						index++
 
-						fmt.Printf("Arrival Queue After entry at #2: %v\n", arrivalQueue)
+						// fmt.Printf("Arrival Queue After entry at #2: %v\n", arrivalQueue)
 					}
 
 					if(scheduledProcess.burstTime == 0) {
@@ -587,8 +587,8 @@ func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile 
 						scheduledProcess.selected = false
 						scheduledProcess.completionTime = time
 						arrivalQueueCapacity--
-						fmt.Printf("Time %3d : %s finished\n", time, scheduledProcess.name)
-						// fmt.Fprintf(output, "Time %3d : %s finished\n", time, scheduledProcess.name)
+						// fmt.Printf("Time %3d : %s finished\n", time, scheduledProcess.name)
+						fmt.Fprintf(output, "Time %3d : %s finished\n", time, scheduledProcess.name)
 
 						completedQueue = append(completedQueue, scheduledProcess)
 
@@ -605,21 +605,21 @@ func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile 
 			}
 
 			if (len(arrivalQueue) == 0){
-				fmt.Printf("Time %3d : Idle\n", time)
-				// fmt.Fprintf(output, "Time %3d : Idle\n", time)
+				// fmt.Printf("Time %3d : Idle\n", time)
+				fmt.Fprintf(output, "Time %3d : Idle\n", time)
 				time++
 
 				if((index < processCount) && (process[index].arrivalTime == time)) {
 
-						fmt.Printf("Time %3d : %s arrived\n", time, process[index].name)
-						// fmt.Fprintf(output, "Time %3d : %s arrived\n", time, process[index].name)
+						// fmt.Printf("Time %3d : %s arrived\n", time, process[index].name)
+						fmt.Fprintf(output, "Time %3d : %s arrived\n", time, process[index].name)
 						arrivalQueue = append(arrivalQueue, process[index])
 						arrivalQueueCapacity++
 
 						//increment the pointer
 						index++
 
-						fmt.Printf("Arrival Queue After entry at #3: %v\n", arrivalQueue)
+						// fmt.Printf("Arrival Queue After entry at #3: %v\n", arrivalQueue)
 					}
 			}
 
@@ -629,8 +629,8 @@ func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile 
 
 
  	//print how long was the system supposed to run for
- 	fmt.Printf("Finished at time  %d\n\n", usefor)
- 	// fmt.Fprintf(output, "Finished at time  %d\n\n", usefor)
+ 	// fmt.Printf("Finished at time  %d\n\n", usefor)
+ 	fmt.Fprintf(output, "Finished at time  %d\n\n", usefor)
 
  	//sort processes with respect to process IDs
  	completedQueue = sort(completedQueue,"ID")
@@ -644,8 +644,8 @@ func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile 
 
  	//print the wait and turn around times
 	for i:=0; i<len(completedQueue); i++ {
-		fmt.Printf("%s wait %3d turnaround %3d\n", completedQueue[i].name, completedQueue[i].waitTime, completedQueue[i].turnAroundTime)
-		// fmt.Fprintf(output, "%s wait %3d turnaround %3d\n", completedQueue[i].name, completedQueue[i].waitTime, completedQueue[i].turnAroundTime)
+		// fmt.Printf("%s wait %3d turnaround %3d\n", completedQueue[i].name, completedQueue[i].waitTime, completedQueue[i].turnAroundTime)
+		fmt.Fprintf(output, "%s wait %3d turnaround %3d\n", completedQueue[i].name, completedQueue[i].waitTime, completedQueue[i].turnAroundTime)
 
 	}
 

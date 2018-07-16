@@ -30,3 +30,5 @@ echo "10 processes - sjf complete"
 ./pa1 c10-fcfs.in c10-fcfs.stu
 diff c10-fcfs.stu c10-fcfs.base
 echo "10 processes - fcfs complete"
+rm *.stu
+rm pa1

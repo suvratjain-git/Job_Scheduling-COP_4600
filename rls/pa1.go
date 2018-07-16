@@ -14,7 +14,7 @@ import (
      "strconv"
 )
 
-//This struct holds a Process's Information such as Process ID, name, arrival time, burst time, wait time, turn arount time, completion time, selection time, boolean flag for when a process is selected and completed 
+//Process struct to hold attributes of a Process
 type ProcessInfo struct {
 	ID int
    	name string
@@ -28,7 +28,6 @@ type ProcessInfo struct {
 
    	selected bool
    	completed bool
-  
 }
 
 // type BurstTimesSFJ struct {
@@ -654,13 +653,16 @@ func rr (process []ProcessInfo, processCount int, usefor int, q int, outputFile 
 
 func main() {
 
-	//Read the file name from the CLI arguements and convert it into an array of bytes
+	//get the input file and outfile names from CLI
 	inputFile := os.Args[1]
 	outputFile := os.Args[2]
 
+	//get process count, time to run the algorithm for, type of algorithm to be used and quantum from the input file
+	//make a slice of all the processes and add their respective information from the input file
 	processCount, totalTime, schedulingAlgorithm, quantum = getProcessInfo(inputFile)
 	process = getListOfProcesses(inputFile, processCount)
 
+	//run the algorithm depending on which one is mentioned in the input file
 	if(schedulingAlgorithm == "fcfs") {
 		fcfs(process, processCount, totalTime, outputFile)
 	} else if (schedulingAlgorithm == "sjf") {
